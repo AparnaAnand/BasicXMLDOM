@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>XML</title>
+		<script type="text/javascript">
+		var xmlDoc;
+		var html_text;
+		function parseXML(what)
+		{
+			var url = what.xmlpage.value;
+			//error handle #1
+			if(url=='')
+			{
+				alert('Error: no input. Enter an XML file name.');
+				return;
+			}
+			//error handle #2
+			var patt=new RegExp("(.*)\.xml$");
+			if(!patt.test(url))
+			{
+				alert('Error: wrong input. Enter an XML file name.');
+				return;
+			}
+			if (window.XMLHttpRequest)
+			{
+				xmlhttp=new XMLHttpRequest();
+			}
+			else
+			{
+				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			//error handle #3
+			xmlhttp.open("GET",url,false);
+			xmlhttp.send();
+			if(xmlhttp.status==404)
+			{
+				alert('File doesn\'t exist. Enter again.');
+				return;
+			}
+			//error handle #4
+			xmlDoc = xmlhttp.responseXML;
+			if(xmlDoc.documentElement.nodeName == "parsererror")
+			{
+				alert('Parsing error in XML file.');
+				return;
+			}
+			ELEMENT_NODE = 1;
+			root=xmlDoc.DocumentElement;
+			html_text="";
+			html_text="<html><head><title>XML Parse Result</title></head><style>*{margin:0px;padding:0px;}</style><body>";
+			html_text+="<table border='2' style='width:1108px;'><tr>";
+			hList=xmlDoc.getElementsByTagName("Header").item(0).childNodes;
+			for(i=0;i<hList.length;i++)
+			{
+				if(hList.item(i).nodeType==ELEMENT_NODE)
+				{
+					html_text+="<th>"+hList.item(i).firstChild.nodeValue+"</th>";
+				}
+			}
+			html_text+="</tr>";
+			//error handle #5
+			rowList=xmlDoc.getElementsByTagName("Row");
+			if(rowList.length==0)
+			{
+				alert('No Radio station listings in XML file.');
+				return;
+			}
+			for(i=0;i<rowList.length;i++)
+			{
+				var flag=0;
+				if(rowList.item(i).nodeType==ELEMENT_NODE)
+				{
+					html_text+="<tr>";
+					underRow=rowList.item(i).childNodes;
+					for(j=0;j<underRow.length;j++)
+					{
+						if(underRow.item(j).nodeType==ELEMENT_NODE)
+						{
+							ll=underRow.item(j).childNodes.length;
+							if(underRow.item(j).nodeName=='Location')
+							{
+								flag=1;
+								underLoc=underRow.item(j).childNodes;
+								html_text+="<td style='width:335px;'>"
+								if(ll<=1)
+								{
+									html_text+=" </td>";
+									continue;
+								}
+								html_text+="<ul style='margin:45px'>";
+								for(k=0;k<underLoc.length;k++)
+								{
+									if(underLoc.item(k).nodeType==ELEMENT_NODE)
+									{
+										l=underLoc.item(k).childNodes.length;
+										if(underLoc.item(k).nodeName=='City')
+										{
+											if(l==0)
+											{
+												html_text+=" ";
+											}
+											else
+											{
+												html_text+="<li>"+underLoc.item(k).firstChild.nodeValue+"</li>";
+											}
+										}
+										else
+										{
+											if(l==0)
+											{
+												html_text+=" ";
+											}
+											else
+											{
+												html_text+="<li>"+underLoc.item(k).firstChild.nodeValue+"</li>";									
+											}
+										}
+									}
+								}
+								html_text+="</ul></td>";
+							}
+							else if(underRow.item(j).nodeName=='HomePage')
+							{
+								if(ll==0)
+								{
+									html_text+="<td style='width:195px;'> </td>";
+								}
+								else
+								{
+									html_text+="<td style='width:195px;'><a href='"+underRow.item(j).firstChild.nodeValue+"' target='_blank'>"+underRow.item(j).firstChild.nodeValue+"</a></td>";
+								}
+							}
+							else if(underRow.item(j).nodeName=='Logo')
+							{
+								if(ll==0)
+								{
+									html_text+="<td style='width:348px;height:175px;'> </td>";
+								}
+								else
+								{
+									html_text+="<td><img src='"+underRow.item(j).firstChild.nodeValue+"' alt='"+underRow.item(j).firstChild.nodeValue+"' width='348px' height='175px'></td>";
+								}
+							}
+							else if(underRow.item(j).nodeName=='Frequency')
+							{
+								if(ll==0)
+								{
+									html_text+="<td style='width:75px;'> </td>";
+								}
+								else
+								{
+									html_text+="<td style='width:75px;'>"+underRow.item(j).firstChild.nodeValue+"</td>";
+								}
+							}
+							else if(underRow.item(j).nodeName=='Format')
+							{
+								if(ll==0)
+								{
+									html_text+="<td style='width:90px;'> </td>";
+								}
+								else
+								{
+									html_text+="<td style='width:90px;'>"+underRow.item(j).firstChild.nodeValue+"</td>";
+								}
+							}
+							else
+							{
+								if(ll==0)
+								{
+									html_text+="<td style='width:65px;'> </td>";
+								}
+								else
+								{
+									html_text+="<td style='width:65px;'>"+underRow.item(j).firstChild.nodeValue+"</td>";
+								}
+							}
+						}
+					}
+					html_text+="</tr>";
+				}
+				if(flag!=1)
+				{
+					alert('Location tag is missing.');
+					return;
+				}
+			}
+			html_text+="</table>";
+			html_text+="<noscript></body></html>";
+			hWin = window.open("", "XMLdoc"+ Math.random(), "status,resizable,scrollbars=yes,width=1125px");
+			hWin.document.write(html_text);
+		}
+		</script>
+	</head>
+	<body>
+		<form action='' method='get'>
+			<div style='text-align:center'>
+				<label>Enter URL for Company List XML File</label>
+				<br><br>
+				<input type='text' name='xmlpage' id='xmlpage'></input>
+				<br><br>
+				<input type='submit' name='submit' onclick='parseXML(this.form)' value='Submit Query'></input>
+			</div>
+		</form>
+		<noscript>
+	</body>
+</html>
